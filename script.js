@@ -53,15 +53,16 @@ const player = {
 };
 
 const treeTiers = [
-  { id: 'birch', name: 'Birch', item: 'Birch Log', xp: 25, level: 1 },
-  { id: 'oak', name: 'Oak', item: 'Oak Log', xp: 45, level: 3 },
-  { id: 'elder', name: 'Elder', item: 'Elder Log', xp: 65, level: 6 }
+  { id: 'pine', name: 'Pine', item: 'Pine Log', xp: 25, level: 1 },
+  { id: 'oak', name: 'Oak', item: 'Oak Log', xp: 45, level: 15 },
+  { id: 'yew', name: 'Yew', item: 'Yew Log', xp: 70, level: 30 }
 ];
 
 const oreTiers = [
   { id: 'copper', name: 'Copper', item: 'Copper Ore', xp: 30, level: 1 },
-  { id: 'iron', name: 'Iron', item: 'Iron Ore', xp: 55, level: 4 },
-  { id: 'starcoal', name: 'Starcoal', item: 'Starcoal', xp: 70, level: 7 }
+  { id: 'tin', name: 'Tin', item: 'Tin Ore', xp: 45, level: 10 },
+  { id: 'iron', name: 'Iron', item: 'Iron Ore', xp: 60, level: 20 },
+  { id: 'starcoal', name: 'Starcoal', item: 'Starcoal', xp: 80, level: 30 }
 ];
 
 let nodes = [];
@@ -202,13 +203,13 @@ function generateWorld() {
         { type: 'fletcher', label: 'Fletching Bench', id: 'fletcher' }
       ]
     },
-    { id: 'grove', name: 'Emerald Wilds', description: 'Tiered trees for shafts and logs.', resourceType: 'tree', resourceCount: 6 },
+    { id: 'grove', name: 'Emerald Wilds', description: 'Tiered trees for shafts and logs.', resourceType: 'tree', resourceCount: 8 },
     {
       id: 'quarry',
       name: 'Deep Quarry',
-      description: 'Tiered ore, starcoal shards, and a lurking beast.',
+      description: 'Copper, tin, iron, starcoal, and a lurking beast.',
       resourceType: 'rock',
-      resourceCount: 6,
+      resourceCount: 10,
       nodeTemplates: [{ type: 'beast', label: 'Mire Beast', maxHp: 60, id: 'beast' }]
     },
     { id: 'lake', name: 'Shimmer Lake', description: 'Fish for food before deeper runs.', nodeTemplates: [{ type: 'water', id: 'water1' }, { type: 'water', id: 'water2' }, { type: 'water', id: 'water3' }] },
@@ -365,10 +366,10 @@ function smeltBar(type) {
   const forgeAvailable = getCurrentNodes().some((n) => n.type === 'forge');
   if (!forgeAvailable) return log('You need a forge to smelt bars.', 'Smithing');
   if (type === 'Bronze') {
-    if (!consumeItem('Copper Ore', 2)) return log('You need 2 Copper Ore for a bronze bar.', 'Smithing');
+    if (!consumeItem('Copper Ore', 1) || !consumeItem('Tin Ore', 1)) return log('You need 1 Copper Ore and 1 Tin Ore for a bronze bar.', 'Smithing');
     addItem('BronzeBar', 1);
     addXp('smithing', 35);
-    log('You smelt ore into a bronze bar.', 'Smithing');
+    log('You smelt copper and tin into a bronze bar.', 'Smithing');
     progressQuest('smelt', { item: 'BronzeBar', amount: 1 });
   }
   if (type === 'Iron') {
@@ -757,7 +758,7 @@ function renderActions() {
   if (nearby.includes('rock')) actionList.push({ label: 'Mine tiered ore & starcoal', handler: mineRock });
   if (nearby.includes('water')) actionList.push({ label: 'Fish the waters', handler: fishWater });
   if (nearby.includes('forge')) {
-      actionList.push({ label: 'Smelt Bronze Bar (2 Copper Ore)', handler: () => smeltBar('Bronze') });
+      actionList.push({ label: 'Smelt Bronze Bar (1 Copper, 1 Tin)', handler: () => smeltBar('Bronze') });
       actionList.push({ label: 'Smelt Iron Bar (3 Iron Ore)', handler: () => smeltBar('Iron') });
       actionList.push({ label: 'Smelt Steel Bar (1 Iron, 2 Starcoal)', handler: () => smeltBar('Steel') });
   }
