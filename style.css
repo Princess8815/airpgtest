@@ -177,6 +177,7 @@ body {
 .log-entry { margin: 0; padding: 0.35rem 0.45rem; border-bottom: 1px solid #111827; }
 .log-entry:last-child { border-bottom: none; }
 .log-entry .tag { font-size: 0.75rem; color: var(--muted); margin-right: 0.25rem; }
+.header-log { max-height: 260px; }
 
 .footer { padding: 1rem 3rem 2rem; color: var(--muted); }
 

@@ -269,6 +269,22 @@ function generateWorld() {
     }
     locations.push(location);
   });
+
+  // Starter resource spots near camp for clarity.
+  const campLoc = locations.find((l) => l.id === 'camp');
+  if (campLoc) {
+    const starterNodes = [
+      { type: 'rock', tier: 'copper', label: 'Copper vein' },
+      { type: 'rock', tier: 'tin', label: 'Tin vein' },
+      { type: 'tree', tier: 'pine', label: 'Pine tree' }
+    ];
+    starterNodes.forEach((n) => {
+      const nodeId = `${n.type}-${n.tier}-starter-${Math.random().toString(16).slice(2, 6)}`;
+      const node = { ...n, id: nodeId, x: Math.max(2, campLoc.coords.x + Math.floor(Math.random() * 3) + 1), y: Math.max(2, campLoc.coords.y + Math.floor(Math.random() * 3) + 1) };
+      nodes.push(node);
+      campLoc.nodes.push(nodeId);
+    });
+  }
 }
 
 function getCurrentNodes() {
@@ -644,20 +660,27 @@ function render() {
   nodes.forEach((node) => {
     const px = node.x * tileSize;
     const py = node.y * tileSize;
-    ctx.fillStyle = {
-      npc: '#7dd3fc',
-      tree: '#22c55e',
-      rock: '#9ca3af',
-      water: '#38bdf8',
-      forge: '#f97316',
-      campfire: '#f59e0b',
-      altar: '#a78bfa',
-      runestone: '#67e8f9',
-      fletcher: '#9ca3af',
-      craft: '#eab308',
-      beast: '#c084fc',
-      boss: '#f87171'
-    }[node.type] || '#ffffff';
+    let color = '#ffffff';
+    if (node.type === 'tree') {
+      color = { pine: '#4ade80', oak: '#16a34a', yew: '#0ea5e9' }[node.tier] || '#22c55e';
+    } else if (node.type === 'rock') {
+      color = { copper: '#f59e0b', tin: '#9ca3af', iron: '#52525b', starcoal: '#7c3aed' }[node.tier] || '#9ca3af';
+    } else {
+      color =
+        {
+          npc: '#7dd3fc',
+          water: '#38bdf8',
+          forge: '#f97316',
+          campfire: '#f59e0b',
+          altar: '#a78bfa',
+          runestone: '#67e8f9',
+          fletcher: '#9ca3af',
+          craft: '#eab308',
+          beast: '#c084fc',
+          boss: '#f87171'
+        }[node.type] || '#ffffff';
+    }
+    ctx.fillStyle = color;
     ctx.fillRect(px + 10, py + 10, tileSize - 20, tileSize - 20);
   });
 
@@ -754,8 +777,8 @@ function renderActions() {
   const nearby = getCurrentNodes().map((n) => n.type);
   const actionList = [];
 
-  if (nearby.includes('tree')) actionList.push({ label: 'Chop tiered trees for logs & shafts', handler: chopTree });
-  if (nearby.includes('rock')) actionList.push({ label: 'Mine tiered ore & starcoal', handler: mineRock });
+  if (nearby.includes('tree')) actionList.push({ label: 'Chop trees (pine/oak/yew) for logs & shafts', handler: chopTree });
+  if (nearby.includes('rock')) actionList.push({ label: 'Mine ore (copper/tin/iron/starcoal)', handler: mineRock });
   if (nearby.includes('water')) actionList.push({ label: 'Fish the waters', handler: fishWater });
   if (nearby.includes('forge')) {
       actionList.push({ label: 'Smelt Bronze Bar (1 Copper, 1 Tin)', handler: () => smeltBar('Bronze') });
