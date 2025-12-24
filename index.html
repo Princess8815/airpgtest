@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arcstone Legends</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="kicker">Menu-first 2D RPG prototype</p>
+      <h1>Arcstone Legends</h1>
+      <p class="lede">Travel via NPC caravans, gather and craft gear tiers, and clear bosses through tactical style swapping. Everything is menu-driven so you can read the story and know exactly what to do.</p>
+      <div class="controls">
+        <span>Travel: choose a destination below</span>
+        <span>Combat: choose a target, press Space or click "Strike"</span>
+        <span>Styles: 1 Melee · 2 Ranged (arrows) · 3 Magic (runes)</span>
+      </div>
+    </div>
+    <div class="story-card">
+      <h2>Prologue</h2>
+      <p>The Ashen Wraith shattered the world rune. The sentinels sealed the shards across the valley. Find allies, forge tiered gear, claim the Rune of Dawn, and confront the Wraith in the Ashen Spire.</p>
+      <p>Every skill matters: gather, smith bronze → iron → steel, fletch ammunition, cook for sustain, craft sigils, pray for wards, and runecraft for magic.</p>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="column wide">
+      <div class="panel">
+        <h3>World Overview</h3>
+        <canvas id="game" width="1152" height="640" aria-label="Arcstone map"></canvas>
+        <p class="muted">Procedurally generated map. Player token auto-moves when you travel.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <h3>Travel & Contacts</h3>
+          <div id="travel" class="travel"></div>
+        </div>
+        <div class="panel">
+          <h3>Quest Steps</h3>
+          <div id="quest-list" class="quest-list"></div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <h3>Actions & Gathering</h3>
+          <div id="actions" class="actions"></div>
+        </div>
+        <div class="panel">
+          <h3>Combat</h3>
+          <div class="style-buttons">
+            <button data-style="melee" class="active">Melee</button>
+            <button data-style="ranged">Ranged</button>
+            <button data-style="magic">Magic</button>
+          </div>
+          <div id="target-panel" class="target-panel">None</div>
+          <div class="combat-buttons">
+            <button id="strike">Strike (Space)</button>
+            <button id="heal">Eat Cooked Fish</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="column">
+      <section class="panel">
+        <h3>Skills</h3>
+        <div id="skills" class="skills"></div>
+      </section>
+      <section class="panel">
+        <h3>Gear & Crafting</h3>
+        <div id="gear" class="gear"></div>
+      </section>
+      <section class="panel">
+        <h3>Bank & Capacity</h3>
+        <div id="bank" class="bank"></div>
+      </section>
+      <section class="panel">
+        <h3>Inventory</h3>
+        <div id="inventory" class="inventory"></div>
+      </section>
+      <section class="panel">
+        <h3>Quest Log</h3>
+        <div id="log" class="log"></div>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <p>Designed for clarity: travel by clicking destinations, craft through menus, and rely on gear tiers to challenge the bosses.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
