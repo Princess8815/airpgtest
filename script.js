@@ -67,6 +67,9 @@ const oreTiers = [
 
 let nodes = [];
 let locations = [];
+let autoEnabled = false;
+let lastAction = null;
+let lastActionLabel = '';
 
 const quests = [
   {
@@ -344,8 +347,8 @@ function consumeAnyLogs(amount) {
   return true;
 }
 
-function chopTree() {
-  const treeNode = getCurrentNodes().find((n) => n.type === 'tree');
+function chopTree(tierId) {
+  const treeNode = getCurrentNodes().find((n) => n.type === 'tree' && (!tierId || n.tier === tierId));
   if (!treeNode) return log('No trees here.', 'Action');
   const tier = pickTreeTier(treeNode);
   if (levelFromXp(skills.woodcutting.xp) < tier.level) {
@@ -358,9 +361,9 @@ function chopTree() {
   progressQuest('gather', { item: tier.item, amount: 1 });
 }
 
-function mineRock() {
-  const rockNode = getCurrentNodes().find((n) => n.type === 'rock');
-  if (!rockNode) return log('No ore veins in this spot.', 'Action');
+function mineOre(tierId) {
+  const rockNode = getCurrentNodes().find((n) => n.type === 'rock' && (!tierId || n.tier === tierId));
+  if (!rockNode) return log('No matching ore veins in this spot.', 'Action');
   const tier = pickOreTier(rockNode);
   if (levelFromXp(skills.mining.xp) < tier.level) {
     return log(`You need Mining level ${tier.level} to mine ${tier.name}.`, 'Mining');
@@ -773,12 +776,34 @@ function renderLog() {
 function renderActions() {
   const container = document.getElementById('actions');
   container.innerHTML = '';
+  const auto = document.createElement('button');
+  auto.textContent = autoEnabled ? `Auto-do: ON (${lastActionLabel || 'pick an action'})` : 'Auto-do: OFF';
+  auto.onclick = () => {
+    autoEnabled = !autoEnabled;
+    if (autoEnabled && !lastAction) log('Auto-do needs an action selected.', 'Auto');
+    renderActions();
+  };
+  container.appendChild(auto);
   const location = locations.find((l) => l.id === player.location);
   const nearby = getCurrentNodes().map((n) => n.type);
   const actionList = [];
 
-  if (nearby.includes('tree')) actionList.push({ label: 'Chop trees (pine/oak/yew) for logs & shafts', handler: chopTree });
-  if (nearby.includes('rock')) actionList.push({ label: 'Mine ore (copper/tin/iron/starcoal)', handler: mineRock });
+  const rockTiers = [...new Set(getCurrentNodes().filter((n) => n.type === 'rock').map((n) => n.tier))];
+  const treeTiers = [...new Set(getCurrentNodes().filter((n) => n.type === 'tree').map((n) => n.tier))];
+
+  if (treeTiers.length) {
+    treeTiers.forEach((tierId) => {
+      const tier = pickTreeTier({ tier: tierId });
+      actionList.push({ label: `Chop ${tier.name} (${tier.level}+ wc)`, handler: () => chopTree(tierId) });
+    });
+  }
+
+  if (rockTiers.length) {
+    rockTiers.forEach((tierId) => {
+      const tier = pickOreTier({ tier: tierId });
+      actionList.push({ label: `Mine ${tier.name} (${tier.level}+ mine)`, handler: () => mineOre(tierId) });
+    });
+  }
   if (nearby.includes('water')) actionList.push({ label: 'Fish the waters', handler: fishWater });
   if (nearby.includes('forge')) {
       actionList.push({ label: 'Smelt Bronze Bar (1 Copper, 1 Tin)', handler: () => smeltBar('Bronze') });
@@ -807,7 +832,12 @@ function renderActions() {
   actionList.forEach((a) => {
     const btn = document.createElement('button');
     btn.textContent = a.label;
-    btn.onclick = a.handler;
+    btn.onclick = () => {
+      lastAction = a.handler;
+      lastActionLabel = a.label;
+      a.handler();
+      renderActions();
+    };
     container.appendChild(btn);
   });
 }
@@ -1009,3 +1039,6 @@ progressQuest('prepare', {});
 travelTo('camp');
 initUI();
 render();
+setInterval(() => {
+  if (autoEnabled && lastAction) lastAction();
+}, 1000);
