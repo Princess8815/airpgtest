@@ -25,16 +25,33 @@ const skills = {
 const inventory = {
   Log: 0,
   Ore: 0,
-  Essence: 0,
+  Coal: 0,
   BronzeBar: 0,
+  IronBar: 0,
+  SteelBar: 0,
   ArrowShaft: 0,
-  Arrow: 5,
+  Arrow: 10,
   RawFish: 0,
-  CookedFish: 1,
+  CookedFish: 2,
   Bone: 0,
-  AirRune: 5,
+  Essence: 0,
+  AirRune: 6,
   RuneOfDawn: 0,
   RestorationSigil: 0
+};
+
+const equipment = {
+  weapon: null,
+  armor: null,
+  focus: null
+};
+
+const gearRecipes = {
+  'Bronze Sword': { slot: 'weapon', tier: 'Bronze', stats: { attack: 2, strength: 1 }, cost: { BronzeBar: 2 }, requires: { smithing: 1 } },
+  'Iron Blade': { slot: 'weapon', tier: 'Iron', stats: { attack: 4, strength: 2 }, cost: { IronBar: 2, Coal: 1 }, requires: { smithing: 4 } },
+  'Bronze Mail': { slot: 'armor', tier: 'Bronze', stats: { defense: 2 }, cost: { BronzeBar: 2, Log: 1 }, requires: { smithing: 2 } },
+  'Steel Aegis': { slot: 'armor', tier: 'Steel', stats: { defense: 6 }, cost: { SteelBar: 2, Bone: 1 }, requires: { smithing: 8 } },
+  'Warden Hood': { slot: 'armor', tier: 'Mystic', stats: { defense: 4, mage: 3 }, cost: { AirRune: 4, CookedFish: 1 }, requires: { crafting: 6 } }
 };
 
 const player = {
@@ -43,16 +60,16 @@ const player = {
   hp: 50,
   maxHp: 50,
   style: 'melee',
-  prayerWard: 0
+  prayerWard: 0,
 };
 
 const nodes = [
   { id: 'sentinel', type: 'npc', x: 5, y: 6, label: 'Elder Sentinel' },
   { id: 'mentor', type: 'npc', x: 7, y: 8, label: 'Archer Mentor' },
-  { id: 'tree1', type: 'tree', x: 9, y: 6 },
-  { id: 'tree2', type: 'tree', x: 9, y: 7 },
+  { id: 'tree1', type: 'tree', x: 10, y: 6 },
+  { id: 'tree2', type: 'tree', x: 10, y: 7 },
   { id: 'tree3', type: 'tree', x: 11, y: 5 },
-  { id: 'rock1', type: 'rock', x: 13, y: 8 },
+  { id: 'rock1', type: 'rock', x: 14, y: 11 },
   { id: 'rock2', type: 'rock', x: 15, y: 9 },
   { id: 'water1', type: 'water', x: 4, y: 11 },
   { id: 'forge', type: 'forge', x: 16, y: 6, label: 'Forge' },
@@ -60,17 +77,28 @@ const nodes = [
   { id: 'altar', type: 'altar', x: 18, y: 5, label: 'Altar' },
   { id: 'runestone', type: 'runestone', x: 22, y: 9, label: 'Runestone' },
   { id: 'fletcher', type: 'fletcher', x: 7, y: 10, label: 'Fletching Bench' },
-  { id: 'workbench', type: 'craft', x: 6, y: 12, label: 'Crafting Bench' },
+  { id: 'craft', type: 'craft', x: 6, y: 12, label: 'Crafting Bench' },
   { id: 'beast', type: 'beast', x: 14, y: 11, label: 'Mire Beast' },
   { id: 'captain', type: 'boss', x: 19, y: 12, label: 'Wraith Captain', maxHp: 70, style: 'melee', shield: 'magic' },
   { id: 'ashen', type: 'boss', x: 23, y: 5, label: 'Ashen Wraith', maxHp: 110, style: 'shadow', phase: 1 }
+];
+
+const locations = [
+  { id: 'camp', name: 'Survivor Camp', description: 'Base, forge, cooking, sigils, mentors.', nodes: ['sentinel', 'mentor', 'forge', 'campfire', 'craft', 'fletcher'], coords: { x: 5, y: 7 } },
+  { id: 'grove', name: 'Twilight Grove', description: 'Fletch and gather wood quietly.', nodes: ['tree1', 'tree2', 'tree3'], coords: { x: 10, y: 6 } },
+  { id: 'quarry', name: 'Mire Quarry', description: 'Mine ore and coal; Mire Beast lurks.', nodes: ['rock1', 'rock2', 'beast'], coords: { x: 14, y: 11 } },
+  { id: 'lake', name: 'Shimmer Lake', description: 'Fish for food before deeper runs.', nodes: ['water1'], coords: { x: 4, y: 11 } },
+  { id: 'ridge', name: 'Runic Ridge', description: 'Runecraft and shape Mystic focus.', nodes: ['runestone'], coords: { x: 22, y: 9 } },
+  { id: 'chapel', name: 'Skyfall Chapel', description: 'Pray for wards and calm.', nodes: ['altar'], coords: { x: 18, y: 5 } },
+  { id: 'keep', name: 'Wraithwatch Keep', description: 'Wraith Captain guards a rune shard.', nodes: ['captain'], coords: { x: 19, y: 12 } },
+  { id: 'spire', name: 'Ashen Spire', description: 'Final ascent; Ashen Wraith awaits.', nodes: ['ashen'], coords: { x: 23, y: 5 } }
 ];
 
 const quests = [
   {
     id: 'camp',
     name: 'Campfire of Hope',
-    description: 'Gather supplies and craft a Restoration Sigil for the survivors.',
+    description: 'Gather and craft a Restoration Sigil for the survivors.',
     goals: [
       { type: 'gather', item: 'Log', required: 5, progress: 0 },
       { type: 'smelt', item: 'BronzeBar', required: 2, progress: 0 },
@@ -94,12 +122,12 @@ const quests = [
   {
     id: 'siege',
     name: 'Siege of Ash',
-    description: 'Fortify yourself and strike down the Ashen Wraith before the valley falls.',
+    description: 'Forge steel, earn protection, and strike down the Ashen Wraith.',
     goals: [
-      { type: 'prepare', skill: 'defense', level: 5, progress: 0 },
+      { type: 'prepare', skill: 'defense', level: 6, progress: 0 },
       { type: 'kill', target: 'Ashen Wraith', required: 1, progress: 0 }
     ],
-    reward: { xp: { attack: 180, strength: 180, defense: 180 }, items: { RuneOfDawn: 1 } },
+    reward: { xp: { attack: 200, strength: 200, defense: 200 }, items: { RuneOfDawn: 1 } },
     completed: false
   }
 ];
@@ -108,7 +136,8 @@ let currentCombat = null;
 let logEntries = [];
 
 function levelFromXp(xp) {
-  return Math.max(1, Math.floor(Math.sqrt(xp / 60)) + 1);
+  // Power curve: higher exponent means slower leveling at higher tiers.
+  return Math.max(1, Math.floor(Math.pow(xp / 100, 1 / 1.7)) + 1);
 }
 
 function addXp(skill, amount) {
@@ -132,119 +161,91 @@ function consumeItem(item, amount = 1) {
   return true;
 }
 
-function distance(a, b) {
-  return Math.hypot(a.x - b.x, a.y - b.y);
-}
-
-function findNearestNode() {
-  let nearest = null;
-  let best = 2; // in tiles
-  nodes.forEach((node) => {
-    const d = distance(player, node);
-    if (d < best) {
-      best = d;
-      nearest = node;
-    }
-  });
-  return nearest;
+function getCurrentNodes() {
+  const location = locations.find((l) => l.id === player.location);
+  if (!location) return [];
+  return nodes.filter((n) => location.nodes.includes(n.id));
 }
 
 function log(message, tag = 'Story') {
   logEntries.push({ message, tag, time: Date.now() });
-  if (logEntries.length > 70) logEntries.shift();
+  if (logEntries.length > 80) logEntries.shift();
   renderLog();
 }
 
-function interact() {
-  const node = findNearestNode();
-  if (!node) {
-    log('There is nothing interesting nearby.', 'Action');
-    return;
-  }
-
-  switch (node.type) {
-    case 'npc':
-      talkToNpc(node);
-      break;
-    case 'tree':
-      chopTree(node);
-      break;
-    case 'rock':
-      mineRock(node);
-      break;
-    case 'water':
-      fishWater(node);
-      break;
-    case 'forge':
-      smelt();
-      break;
-    case 'campfire':
-      cookFood();
-      break;
-    case 'altar':
-      prayAtAltar();
-      break;
-    case 'runestone':
-      craftRunes();
-      break;
-    case 'fletcher':
-      fletchArrows();
-      break;
-    case 'craft':
-      craftSigil();
-      break;
-    case 'beast':
-    case 'boss':
-      startCombat(node);
-      break;
-    default:
-      log('You study the surroundings but nothing happens.', 'Action');
-  }
-  updateQuestsUI();
+function travelTo(locationId) {
+  const location = locations.find((l) => l.id === locationId);
+  if (!location) return;
+  player.location = locationId;
+  player.x = location.coords.x;
+  player.y = location.coords.y;
+  currentCombat = null;
+  renderTarget();
+  log(`Traveled to ${location.name}. ${location.description}`, 'Travel');
+  renderActions();
+  renderTravel();
+  render();
 }
 
-function talkToNpc(node) {
-  if (node.id === 'sentinel') {
-    log('Elder Sentinel: The rune shattered. Forge the Restoration Sigil to steady our camp.', 'Quest');
-  } else {
-    log('Mentor: Keep arrows stocked and switch styles mid-battle to crack enemy wards.', 'Hint');
+function talkToNpc(id) {
+  if (id === 'sentinel') {
+    log('Elder Sentinel: Craft the Restoration Sigil, then seek the Rune of Dawn.', 'Quest');
+  } else if (id === 'mentor') {
+    log('Mentor: Craft arrows and swap styles. Iron and steel will carry you.', 'Hint');
   }
 }
 
 function chopTree() {
+  if (!getCurrentNodes().some((n) => n.type === 'tree')) return log('No trees here.', 'Action');
   addItem('Log', 1);
   addItem('ArrowShaft', 1);
-  addXp('woodcutting', 25);
+  addXp('woodcutting', 28);
   log('You chop a tree and gather logs.', 'Woodcutting');
   progressQuest('gather', { item: 'Log', amount: 1 });
 }
 
 function mineRock() {
+  if (!getCurrentNodes().some((n) => n.type === 'rock')) return log('No ore veins in this spot.', 'Action');
   addItem('Ore', 1);
-  addItem('Essence', 1);
-  addXp('mining', 25);
-  log('You mine ore and unearth rune essence.', 'Mining');
+  if (Math.random() < 0.35) addItem('Coal', 1);
+  addXp('mining', 30);
+  log('You mine ore; sparks flicker as coal surfaces.', 'Mining');
 }
 
 function fishWater() {
+  if (!getCurrentNodes().some((n) => n.type === 'water')) return log('No fishing water here.', 'Action');
   addItem('RawFish', 1);
-  addXp('fishing', 20);
-  log('You cast a line and haul a raw fish.', 'Fishing');
+  addXp('fishing', 22);
+  log('You catch a raw fish.', 'Fishing');
 }
 
-function smelt() {
-  if (inventory.Ore < 2) {
-    log('You need more ore to smelt a bronze bar.', 'Smithing');
-    return;
+function smeltBar(type) {
+  const forgeAvailable = getCurrentNodes().some((n) => n.type === 'forge');
+  if (!forgeAvailable) return log('You need a forge to smelt bars.', 'Smithing');
+  if (type === 'Bronze') {
+    if (!consumeItem('Ore', 2)) return log('You need 2 Ore for a bronze bar.', 'Smithing');
+    addItem('BronzeBar', 1);
+    addXp('smithing', 35);
+    log('You smelt ore into a bronze bar.', 'Smithing');
+    progressQuest('smelt', { item: 'BronzeBar', amount: 1 });
   }
-  consumeItem('Ore', 2);
-  addItem('BronzeBar', 1);
-  addXp('smithing', 30);
-  log('You smelt ore into a bronze bar.', 'Smithing');
-  progressQuest('smelt', { item: 'BronzeBar', amount: 1 });
+  if (type === 'Iron') {
+    if (!consumeItem('Ore', 3)) return log('You need 3 Ore for an iron bar.', 'Smithing');
+    addItem('IronBar', 1);
+    addXp('smithing', 45);
+    log('You smelt ore into an iron bar.', 'Smithing');
+  }
+  if (type === 'Steel') {
+    if (!consumeItem('IronBar', 1) || !consumeItem('Coal', 2)) return log('You need 1 Iron Bar and 2 Coal for steel.', 'Smithing');
+    addItem('SteelBar', 1);
+    addXp('smithing', 55);
+    log('You refine iron and coal into a steel bar.', 'Smithing');
+  }
 }
 
 function craftSigil() {
+  const bench = getCurrentNodes().some((n) => n.type === 'craft');
+  if (!bench) return log('Crafting bench is back at camp.', 'Crafting');
   if (inventory.Log < 2 || inventory.BronzeBar < 1) {
     log('You need 2 Logs and 1 Bronze Bar to craft a Restoration Sigil.', 'Crafting');
     return;
@@ -252,54 +253,62 @@ function craftSigil() {
   consumeItem('Log', 2);
   consumeItem('BronzeBar', 1);
   addItem('RestorationSigil', 1);
-  addXp('crafting', 35);
-  log('You craft a Restoration Sigil that bolsters the camp.', 'Crafting');
+  addXp('crafting', 38);
+  log('You craft a Restoration Sigil that steadies morale.', 'Crafting');
   progressQuest('craft', { item: 'RestorationSigil', amount: 1 });
 }
 
 function cookFood() {
+  const fire = getCurrentNodes().some((n) => n.type === 'campfire');
+  if (!fire) return log('You need the campfire to cook.', 'Cooking');
   if (!inventory.RawFish) {
     log('No raw fish to cook.', 'Cooking');
     return;
   }
   consumeItem('RawFish', 1);
   addItem('CookedFish', 1);
-  addXp('cooking', 20);
+  addXp('cooking', 22);
   log('You cook a fish over the coals. Restores health during fights.', 'Cooking');
 }
 
 function fletchArrows() {
+  const bench = getCurrentNodes().some((n) => n.type === 'fletcher');
+  if (!bench) return log('You need the fletching bench at camp.', 'Fletching');
   if (inventory.ArrowShaft < 1 || inventory.Log < 1) {
     log('You need shafts and logs to fletch arrows.', 'Fletching');
     return;
   }
   consumeItem('ArrowShaft', 1);
   consumeItem('Log', 1);
-  addItem('Arrow', 6);
-  addXp('fletching', 25);
+  addItem('Arrow', 8);
+  addXp('fletching', 28);
   log('You fletch arrows for ranged combat.', 'Fletching');
 }
 
 function craftRunes() {
+  const stone = getCurrentNodes().some((n) => n.type === 'runestone');
+  if (!stone) return log('You need the Runestone at Runic Ridge.', 'Runecrafting');
   if (inventory.Essence < 1) {
     log('You need rune essence to craft runes.', 'Runecrafting');
     return;
   }
   consumeItem('Essence', 1);
-  addItem('AirRune', 4);
-  addXp('runecrafting', 40);
+  addItem('AirRune', 5);
+  addXp('runecrafting', 45);
   log('You shape air runes; the ley lines glow faintly.', 'Runecrafting');
-  progressQuest('runecraft', { item: 'AirRune', amount: 4 });
+  progressQuest('runecraft', { item: 'AirRune', amount: 5 });
 }
 
 function prayAtAltar() {
+  const altar = getCurrentNodes().some((n) => n.type === 'altar');
+  if (!altar) return log('The altar is at Skyfall Chapel.', 'Prayer');
   if (!inventory.Bone) {
     log('Offer bones from fallen foes to strengthen your spirit.', 'Prayer');
     return;
   }
   consumeItem('Bone', 1);
-  addXp('prayer', 25);
-  player.prayerWard = 3;
+  addXp('prayer', 30);
+  player.prayerWard = 4;
   log('You pray, gaining a ward that lessens incoming damage for a few hits.', 'Prayer');
 }
 
@@ -309,7 +318,7 @@ function heal() {
     return;
   }
   consumeItem('CookedFish', 1);
-  player.hp = Math.min(player.maxHp, player.hp + 20);
+  player.hp = Math.min(player.maxHp, player.hp + 24);
   log('You eat cooked fish and feel renewed.', 'Heal');
   renderTarget();
 }
@@ -329,28 +338,40 @@ function startCombat(node) {
   renderTarget();
 }
 
+function getGearBonus(stat) {
+  let bonus = 0;
+  Object.values(equipment).forEach((itemName) => {
+    if (!itemName) return;
+    const data = gearRecipes[itemName];
+    if (data && data.stats && data.stats[stat]) bonus += data.stats[stat];
+  });
+  return bonus;
+}
+
 function calculatePlayerDamage(enemy) {
   const attackLevel = levelFromXp(skills.attack.xp);
   const styleLevel = player.style === 'melee' ? levelFromXp(skills.strength.xp) : player.style === 'ranged' ? levelFromXp(skills.ranged.xp) : levelFromXp(skills.mage.xp);
-  let base = 6 + attackLevel * 0.8 + styleLevel * 0.9;
+  let base = 6 + attackLevel * 0.8 + styleLevel * 0.8 + getGearBonus('attack');
 
+  if (player.style === 'melee') base += getGearBonus('strength');
   if (player.style === 'ranged') {
     if (!consumeItem('Arrow', 1)) {
       log('You are out of arrows!', 'Ranged');
       return 0;
     }
-    addXp('ranged', 20);
+    addXp('ranged', 24);
   }
   if (player.style === 'magic') {
     if (!consumeItem('AirRune', 1)) {
       log('You are out of runes!', 'Magic');
       return 0;
     }
-    addXp('mage', 20);
+    addXp('mage', 24);
+    base += getGearBonus('mage');
   }
 
   if (enemy.shield === 'magic' && player.style === 'magic') {
-    base *= 1.2;
+    base *= 1.25;
     enemy.shield = null;
     log('You break the captain\'s shadow ward with magic!', 'Tactic');
   }
@@ -362,15 +383,15 @@ function calculatePlayerDamage(enemy) {
 }
 
 function enemyDamage(enemy) {
-  const def = levelFromXp(skills.defense.xp);
-  const mitigation = player.prayerWard > 0 ? 0.7 : 1;
-  const dmg = Math.max(2, Math.floor((8 + enemy.maxHp * 0.05) * mitigation - def * 0.4));
+  const def = levelFromXp(skills.defense.xp) + getGearBonus('defense');
+  const mitigation = player.prayerWard > 0 ? 0.65 : 1;
+  const dmg = Math.max(2, Math.floor((8 + enemy.maxHp * 0.05) * mitigation - def * 0.45));
   if (player.prayerWard > 0) player.prayerWard -= 1;
   return dmg;
 }
 
 function combatTurn() {
-  if (!currentCombat) return;
+  if (!currentCombat) return log('No target selected.', 'Combat');
   const dmg = calculatePlayerDamage(currentCombat);
   if (dmg > 0) {
     currentCombat.hp -= dmg;
@@ -391,7 +412,7 @@ function combatTurn() {
   player.hp -= incoming;
   log(`${currentCombat.name} strikes for ${incoming}.`, 'Hit');
   if (player.hp <= 0) {
-    player.hp = Math.floor(player.maxHp * 0.5);
+    player.hp = Math.floor(player.maxHp * 0.6);
     log('You fall but the sentinels drag you back. Rest and try again.', 'Defeat');
     currentCombat = null;
   }
@@ -400,11 +421,12 @@ function combatTurn() {
 
 function winCombat() {
   log(`You defeat ${currentCombat.name}!`, 'Victory');
-  addXp('attack', 30);
-  addXp('strength', 30);
-  addXp('defense', 30);
-  addXp('hp', 30);
+  addXp('attack', 34);
+  addXp('strength', 34);
+  addXp('defense', 34);
+  addXp('hp', 34);
   addItem('Bone', 1);
+  addItem('Essence', 1);
   if (currentCombat.name === 'Mire Beast') {
     addItem('RawFish', 1);
   }
@@ -460,29 +482,14 @@ function render() {
     }
   }
 
-  nodes.forEach((node) => {
-    const px = node.x * tileSize;
-    const py = node.y * tileSize;
-    ctx.fillStyle = {
-      npc: '#7dd3fc',
-      tree: '#22c55e',
-      rock: '#9ca3af',
-      water: '#38bdf8',
-      forge: '#f97316',
-      campfire: '#f59e0b',
-      altar: '#a78bfa',
-      runestone: '#67e8f9',
-      fletcher: '#9ca3af',
-      craft: '#eab308',
-      beast: '#c084fc',
-      boss: '#f87171'
-    }[node.type] || '#ffffff';
-    ctx.fillRect(px + 8, py + 8, tileSize - 16, tileSize - 16);
-    if (node.label) {
-      ctx.fillStyle = '#9fb0c7';
-      ctx.font = '12px Inter';
-      ctx.fillText(node.label, px - 6, py + tileSize - 20);
-    }
+  locations.forEach((loc) => {
+    const px = loc.coords.x * tileSize;
+    const py = loc.coords.y * tileSize;
+    ctx.fillStyle = '#7dd3fc';
+    ctx.fillRect(px + 6, py + 6, tileSize - 12, tileSize - 12);
+    ctx.fillStyle = '#9fb0c7';
+    ctx.font = '12px Inter';
+    ctx.fillText(loc.name, px - 8, py + tileSize - 18);
   });
 
   ctx.fillStyle = '#fbbf24';
@@ -517,7 +524,7 @@ function renderInventory() {
 function renderLog() {
   const container = document.getElementById('log');
   container.innerHTML = '';
-  logEntries.slice(-20).forEach((entry) => {
+  logEntries.slice(-25).forEach((entry) => {
     const el = document.createElement('p');
     el.className = 'log-entry';
     el.innerHTML = `<span class="tag">[${entry.tag}]</span> ${entry.message}`;
@@ -529,20 +536,122 @@ function renderLog() {
 function renderActions() {
   const container = document.getElementById('actions');
   container.innerHTML = '';
-  const actions = [
-    { label: 'Heal with cooked fish', handler: heal },
-    { label: 'Craft Restoration Sigil (camp bench)', handler: craftSigil },
-    { label: 'Fletch arrows (bench)', handler: fletchArrows },
-    { label: 'Cook food (campfire)', handler: cookFood },
-    { label: 'Smelt bronze (forge)', handler: smelt },
-    { label: 'Craft runes (runestone)', handler: craftRunes },
-    { label: 'Pray for ward (altar)', handler: prayAtAltar }
-  ];
-  actions.forEach((a) => {
+  const location = locations.find((l) => l.id === player.location);
+  const nearby = getCurrentNodes().map((n) => n.type);
+  const actionList = [];
+
+  if (nearby.includes('tree')) actionList.push({ label: 'Chop wood & shafts (Twilight Grove)', handler: chopTree });
+  if (nearby.includes('rock')) actionList.push({ label: 'Mine ore & coal (Mire Quarry)', handler: mineRock });
+  if (nearby.includes('water')) actionList.push({ label: 'Fish at Shimmer Lake', handler: fishWater });
+  if (nearby.includes('forge')) {
+    actionList.push({ label: 'Smelt Bronze Bar (2 Ore)', handler: () => smeltBar('Bronze') });
+    actionList.push({ label: 'Smelt Iron Bar (3 Ore)', handler: () => smeltBar('Iron') });
+    actionList.push({ label: 'Smelt Steel Bar (1 Iron, 2 Coal)', handler: () => smeltBar('Steel') });
+  }
+  if (nearby.includes('campfire')) actionList.push({ label: 'Cook food (campfire)', handler: cookFood });
+  if (nearby.includes('fletcher')) actionList.push({ label: 'Fletch arrows', handler: fletchArrows });
+  if (nearby.includes('craft')) actionList.push({ label: 'Craft Restoration Sigil', handler: craftSigil });
+  if (nearby.includes('runestone')) actionList.push({ label: 'Craft air runes', handler: craftRunes });
+  if (nearby.includes('altar')) actionList.push({ label: 'Pray for ward', handler: prayAtAltar });
+  if (nearby.includes('npc')) actionList.push({ label: 'Talk to locals', handler: () => talkToNpc('sentinel') });
+  if (nearby.includes('boss') || nearby.includes('beast')) {
+    getCurrentNodes()
+      .filter((n) => n.type === 'boss' || n.type === 'beast')
+      .forEach((n) => actionList.push({ label: `Engage ${n.label}`, handler: () => startCombat(n) }));
+  }
+
+  if (actionList.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'hint';
+    p.textContent = `No direct actions here. Travel to a hotspot to gather or fight. (${location?.name || ''})`;
+    container.appendChild(p);
+  }
+
+  actionList.forEach((a) => {
     const btn = document.createElement('button');
     btn.textContent = a.label;
     btn.onclick = a.handler;
     container.appendChild(btn);
+  });
+}
+
+function renderGear() {
+  const container = document.getElementById('gear');
+  container.innerHTML = '';
+
+  const equipBlock = document.createElement('div');
+  equipBlock.className = 'equipment';
+  equipBlock.innerHTML = `
+    <h4>Equipped</h4>
+    <div class="meta">Weapon: ${equipment.weapon || 'None'}</div>
+    <div class="meta">Armor: ${equipment.armor || 'None'}</div>
+    <div class="meta">Focus: ${equipment.focus || 'None'}</div>
+  `;
+  container.appendChild(equipBlock);
+
+  const craftBlock = document.createElement('div');
+  craftBlock.className = 'craftables';
+  craftBlock.innerHTML = '<h4>Craft Gear</h4>';
+
+  Object.entries(gearRecipes).forEach(([name, recipe]) => {
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    const stats = Object.entries(recipe.stats)
+      .map(([k, v]) => `${k}+${v}`)
+      .join(', ');
+    const requirements = Object.entries(recipe.cost)
+      .map(([k, v]) => `${k} x${v}`)
+      .join(' · ');
+    const levelReq = Object.entries(recipe.requires || {})
+      .map(([k, v]) => `${k} ${v}`)
+      .join(', ');
+    row.innerHTML = `
+      <div>
+        <strong>${name}</strong> <span class="meta">${recipe.tier} ${recipe.slot}</span><br>
+        <span class="meta">Stats: ${stats}</span><br>
+        <span class="meta">Cost: ${requirements}${levelReq ? ` · Req: ${levelReq}` : ''}</span>
+      </div>
+    `;
+    const btn = document.createElement('button');
+    btn.textContent = 'Craft';
+    btn.onclick = () => craftGearItem(name);
+    row.appendChild(btn);
+    craftBlock.appendChild(row);
+  });
+
+  const inventoryGear = document.createElement('div');
+  inventoryGear.className = 'craftables';
+  inventoryGear.innerHTML = '<h4>Gear in packs</h4>';
+  Object.keys(gearRecipes).forEach((name) => {
+    if (!inventory[name]) return;
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `<div><strong>${name}</strong> <span class="meta">x${inventory[name]}</span></div>`;
+    const btn = document.createElement('button');
+    btn.textContent = 'Equip';
+    btn.onclick = () => equipItem(name);
+    row.appendChild(btn);
+    inventoryGear.appendChild(row);
+  });
+
+  container.appendChild(craftBlock);
+  container.appendChild(inventoryGear);
+}
+
+function renderTravel() {
+  const container = document.getElementById('travel');
+  container.innerHTML = '';
+  locations.forEach((loc) => {
+    const card = document.createElement('div');
+    card.className = 'travel-card';
+    const isHere = loc.id === player.location;
+    card.innerHTML = `<h4>${loc.name}</h4><p class="meta">${loc.description}</p><p class="meta">${isHere ? 'You are here' : 'Click travel to move instantly'}</p>`;
+    const btn = document.createElement('button');
+    btn.textContent = isHere ? 'Arrived' : 'Travel';
+    btn.disabled = isHere;
+    btn.onclick = () => travelTo(loc.id);
+    card.appendChild(btn);
+    container.appendChild(card);
   });
 }
 
@@ -585,17 +694,45 @@ function setStyle(style) {
   document.querySelectorAll('.style-buttons button').forEach((btn) => btn.classList.toggle('active', btn.dataset.style === style));
 }
 
+function equipItem(name) {
+  const recipe = gearRecipes[name];
+  if (!recipe) return;
+  if (!inventory[name]) return log(`You need to craft ${name} first.`, 'Gear');
+  const slot = recipe.slot;
+  equipment[slot] = name;
+  log(`Equipped ${name}.`, 'Gear');
+  renderGear();
+}
+
+function hasMaterials(cost) {
+  return Object.entries(cost).every(([item, amt]) => (inventory[item] || 0) >= amt);
+}
+
+function craftGearItem(name) {
+  const recipe = gearRecipes[name];
+  if (!recipe) return;
+  const forge = getCurrentNodes().some((n) => n.type === 'forge');
+  const bench = getCurrentNodes().some((n) => n.type === 'craft');
+  const craftingSpot = forge || bench;
+  if (!craftingSpot) return log('Craft gear at camp: forge and benches are there.', 'Gear');
+  const levelOk = Object.entries(recipe.requires || {}).every(([skill, level]) => levelFromXp(skills[skill].xp) >= level);
+  if (!levelOk) return log('Skill requirement not met.', 'Gear');
+  if (!hasMaterials(recipe.cost)) return log('Missing materials for this recipe.', 'Gear');
+  Object.entries(recipe.cost).forEach(([item, amt]) => consumeItem(item, amt));
+  addItem(name, 1);
+  log(`You craft ${name}.`, 'Gear');
+  renderGear();
+}
+
 function handleKeys(e) {
   const key = e.key.toLowerCase();
-  if (key === 'w' && player.y > 1) player.y -= 1;
-  if (key === 's' && player.y < mapHeight - 2) player.y += 1;
-  if (key === 'a' && player.x > 1) player.x -= 1;
-  if (key === 'd' && player.x < mapWidth - 2) player.x += 1;
-  if (key === 'e') interact();
   if (key === '1') setStyle('melee');
   if (key === '2') setStyle('ranged');
   if (key === '3') setStyle('magic');
-  if (key === ' ') combatTurn();
+  if (key === ' ') {
+    e.preventDefault();
+    combatTurn();
+  }
 }
 
 function deliverRune() {
@@ -612,10 +749,14 @@ function initUI() {
   renderInventory();
   renderLog();
   renderActions();
+  renderTravel();
+  renderGear();
   updateQuestsUI();
   document.querySelectorAll('.style-buttons button').forEach((btn) => {
     btn.addEventListener('click', () => setStyle(btn.dataset.style));
   });
+  document.getElementById('strike').addEventListener('click', combatTurn);
+  document.getElementById('heal').addEventListener('click', heal);
 }
 
 document.addEventListener('keydown', handleKeys);
@@ -623,8 +764,9 @@ document.getElementById('quest-list').addEventListener('click', (e) => {
   if (e.target.closest('.quest-card')) deliverRune();
 });
 
-log('The valley lies quiet. Supplies are low, but hope flickers.', 'Story');
-log('Gather logs, smelt bronze, craft the Restoration Sigil, and seek the Rune of Dawn.', 'Story');
+log('The valley lies quiet. Travel via caravans and prepare for the Wraith.', 'Story');
+log('Gather logs and ore, smelt bronze → iron → steel, craft the Restoration Sigil, then hunt the Rune of Dawn.', 'Story');
 progressQuest('prepare', {});
+travelTo('camp');
 initUI();
 render();

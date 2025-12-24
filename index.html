@@ -12,58 +12,74 @@
 <body>
   <header class="hero">
     <div>
-      <p class="kicker">2D RPG experiment</p>
+      <p class="kicker">Menu-first 2D RPG prototype</p>
       <h1>Arcstone Legends</h1>
-      <p class="lede">Rebuild the shattered realm using every skill you can muster. Explore, gather, craft, quest, and challenge bosses with tactical combat styles.</p>
+      <p class="lede">Travel via NPC caravans, gather and craft gear tiers, and clear bosses through tactical style swapping. Everything is menu-driven so you can read the story and know exactly what to do.</p>
       <div class="controls">
-        <span>Move: WASD</span>
-        <span>Interact: E</span>
-        <span>Switch style: 1 Melee · 2 Ranged · 3 Mage</span>
+        <span>Travel: choose a destination below</span>
+        <span>Combat: choose a target, press Space or click "Strike"</span>
+        <span>Styles: 1 Melee · 2 Ranged (arrows) · 3 Magic (runes)</span>
       </div>
     </div>
     <div class="story-card">
       <h2>Prologue</h2>
-      <p>The beacon-city of Arcstone fell when the Ashen Wraith shattered the world rune. The surviving sentinels sealed fragments across the valley. You must reunite them, restore the rune, and face the Wraith before its legion consumes the last light.</p>
-      <p>Every skill matters: harvest to rebuild the camp, craft gear, fletch ammunition, cook for healing, pray to strengthen spirit, and forge runes to channel magic.</p>
+      <p>The Ashen Wraith shattered the world rune. The sentinels sealed the shards across the valley. Find allies, forge tiered gear, claim the Rune of Dawn, and confront the Wraith in the Ashen Spire.</p>
+      <p>Every skill matters: gather, smith bronze → iron → steel, fletch ammunition, cook for sustain, craft sigils, pray for wards, and runecraft for magic.</p>
     </div>
   </header>
 
   <main class="layout">
-    <section class="game-area">
-      <canvas id="game" width="832" height="480" aria-label="Arcstone map"></canvas>
-      <div class="hud">
-        <div class="hud-group">
-          <h3>Combat Style</h3>
+    <section class="column wide">
+      <div class="panel">
+        <h3>World Overview</h3>
+        <canvas id="game" width="832" height="320" aria-label="Arcstone map"></canvas>
+        <p class="muted">Player token auto-moves when you travel. No WASD needed.</p>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <h3>Travel & Contacts</h3>
+          <div id="travel" class="travel"></div>
+        </div>
+        <div class="panel">
+          <h3>Quest Steps</h3>
+          <div id="quest-list" class="quest-list"></div>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="panel">
+          <h3>Actions & Gathering</h3>
+          <div id="actions" class="actions"></div>
+        </div>
+        <div class="panel">
+          <h3>Combat</h3>
           <div class="style-buttons">
             <button data-style="melee" class="active">Melee</button>
             <button data-style="ranged">Ranged</button>
             <button data-style="magic">Magic</button>
           </div>
-        </div>
-        <div class="hud-group">
-          <h3>Quests</h3>
-          <div id="quest-list" class="quest-list"></div>
-        </div>
-        <div class="hud-group">
-          <h3>Active Target</h3>
           <div id="target-panel" class="target-panel">None</div>
+          <div class="combat-buttons">
+            <button id="strike">Strike (Space)</button>
+            <button id="heal">Eat Cooked Fish</button>
+          </div>
         </div>
       </div>
     </section>
 
-    <aside class="sidebar">
+    <aside class="column">
       <section class="panel">
         <h3>Skills</h3>
         <div id="skills" class="skills"></div>
       </section>
       <section class="panel">
-        <h3>Inventory</h3>
-        <div id="inventory" class="inventory"></div>
+        <h3>Gear & Crafting</h3>
+        <div id="gear" class="gear"></div>
       </section>
       <section class="panel">
-        <h3>Actions</h3>
-        <p class="muted">Interact with nearby objects to gather, craft, cook, pray, fletch, and more.</p>
-        <div id="actions" class="actions"></div>
+        <h3>Inventory</h3>
+        <div id="inventory" class="inventory"></div>
       </section>
       <section class="panel">
         <h3>Quest Log</h3>
@@ -73,7 +89,7 @@
   </main>
 
   <footer class="footer">
-    <p>Designed for fast experimentation: everything saves in memory while the page is open.</p>
+    <p>Designed for clarity: travel by clicking destinations, craft through menus, and rely on gear tiers to challenge the bosses.</p>
   </footer>
 
   <script src="script.js"></script>
